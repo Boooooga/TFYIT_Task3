@@ -34,19 +34,20 @@ namespace TFYIT_Task3
         }
 
         // конструктор
-        public Parser(string path) 
+        public Parser(string path)
         {
             using (StreamReader sr = new StreamReader(path))
             {
                 string line = sr.ReadLine();
+                string lexeme;
                 string lexType;
+                int index;
                 while (line != null)
                 {
-                    lexType = GetLexemeType(line);
-                    if (lexType != "UNKNOWN")
-                    {
-                        lexemes.Add(new Lexeme(line, lexType));
-                    }
+                    index = int.Parse(line.Split()[0]);
+                    lexeme = line.Split()[1];
+                    lexType = line.Split()[2];
+                    lexemes.Add(new Lexeme(lexeme, lexType, index));
                     line = sr.ReadLine();
                 }
             }
@@ -59,24 +60,6 @@ namespace TFYIT_Task3
                 Console.WriteLine($"{i}. Лексема: {lexeme.Value}, тип: {lexeme.Type}");
                 i++;
             }
-        }
-        // определение типа лексемы
-        private string GetLexemeType(string input)
-        {
-            if (input == "if") return "IF";
-            else if (input == "then") return "THEN";
-            else if (input == "else") return "ELSE";
-            else if (input == "end") return "END";
-            else if (input == ">" || input == "<" || input == "==" ||
-                input == ">=" || input == "<=" || input == "<>") return "REL";
-            else if (input == "+" || input == "-" || input == "*" || input == "/") return "MATH";
-            else if (input == "and") return "AND";
-            else if (input == "or") return "OR";
-            else if (input == ";" || input == ",") return "DLM";
-            else if (input == "=") return "ASGN";
-            else if (char.IsDigit(input[0])) return "NUM";
-            else if (char.IsLetter(input[0])) return "ID";
-            else return "UNKNOWN";
         }
         // остались ли ещё лексемы для считывания
         private bool AnyMoreLexemes()
@@ -107,9 +90,12 @@ namespace TFYIT_Task3
         // запуск парсинга
         public void Parse()
         {
-            Console.WriteLine("Начинается синтаксический анализ...");
+            Console.WriteLine("Начинается синтаксический анализ...\n");
             ParseStatement();
-            Console.WriteLine("Анализ завершён. Ошибки не найдены.");
+
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine("\nАнализ завершён. Ошибки не найдены.");
+            Console.ResetColor();
         }
         // парсинг оператора if-then-else
         private void ParseStatement()
@@ -124,8 +110,10 @@ namespace TFYIT_Task3
                 Console.WriteLine("Анализ оператора if");
                 ParseCondition();
                 Expect("THEN");
+                Console.WriteLine("Анализ оператора then");
                 ParseStatementList();
                 Expect("ELSE");
+                Console.WriteLine("Анализ оператора else");
                 ParseStatementList();
                 Expect("END");
             }
@@ -142,7 +130,11 @@ namespace TFYIT_Task3
             ParseStatement();
             while (Match("DLM"))
             {
-                Console.WriteLine("Обнаружен разделитель ';', продолжается анализ списка операторов");
+                Console.Write("Обнаружен разделитель '");
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.Write(";");
+                Console.ResetColor();
+                Console.WriteLine("', продолжается анализ списка операторов");
                 ParseStatement();
             }
         }
@@ -175,7 +167,7 @@ namespace TFYIT_Task3
         {
             if (lexemes[currentIndex].Type == "ID")
             {
-                Console.Write("Обнаружен идентификатор ");
+                Console.Write("- Обнаружен идентификатор ");
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine(currentLexeme.Value);
                 Console.ResetColor();
@@ -183,7 +175,7 @@ namespace TFYIT_Task3
             }
             else if (lexemes[currentIndex].Type == "NUM")
             {
-                Console.Write("Обнаружена константа ");
+                Console.Write("- Обнаружена константа ");
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine(currentLexeme.Value);
                 Console.ResetColor();
