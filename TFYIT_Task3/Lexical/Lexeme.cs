@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TFYIT_Task3
+namespace TFYIT_All_Tasks.Lexical
 {
     internal class Lexeme
     {

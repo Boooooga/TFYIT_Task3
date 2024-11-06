@@ -4,17 +4,18 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TFYIT_All_Tasks.Lexical;
 
-namespace TFYIT_Task3
+namespace TFYIT_All_Tasks.Syntax
 {
     internal class Parser
     {
         List<Lexeme> lexemes = new List<Lexeme>();
-        string[] reservedWords = { "if", "then", "else", "end"}; // ключевые слова
+        string[] reservedWords = { "if", "then", "else", "end" }; // ключевые слова
         string[] relSigns = { ">", "<", "==", "<>", ">=", "<=", "=" }; // знаки сравнения
         string[] mathSigns = { "+", "-", "*", "/" }; // знаки арифметических операций
         string[] logicSigns = { "or", "and" }; // логические выражения
-        private string[] delimiters = { ";", ","}; // разделители
+        private string[] delimiters = { ";", "," }; // разделители
 
 
         private int currentIndex = 0;
@@ -207,6 +208,11 @@ namespace TFYIT_Task3
             Expect("ASGN");
             Console.WriteLine("Анализ операции присваивания");
             ParseExpression();
+        }
+
+        public List<Lexeme> GetLexemes
+        {
+            get { return lexemes; }
         }
     }
 }
