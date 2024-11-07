@@ -14,11 +14,15 @@ namespace TFYIT_Task2
         {
             #region Лексический анализатор
             // ЛЕКСИЧЕСКИЙ АНАЛИЗАТОР
-            string path = @"C:\Users\123\Documents\Универ\Теория формальных языков и трансляций\inputCode.txt";
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("1. Лексический анализ");
+            Console.ResetColor();
+
+            string path = @"D:\Media\Универ\Теория формальных языков\inputline.txt";
             LexAnalyzer analyzer = new LexAnalyzer();
             List<string> result = analyzer.Analyze(path);
 
-            string outPath = @"C:\Users\123\Documents\Универ\Теория формальных языков и трансляций\lexemesList.txt";
+            string outPath = @"D:\Media\Универ\Теория формальных языков\lexemeslist.txt";
             using (StreamWriter sw = new StreamWriter(outPath))
             {
                 int i = 0;
@@ -34,15 +38,23 @@ namespace TFYIT_Task2
 
             #region Синтаксический анализатор
             // СИНТАКСИЧЕСКИЙ АНАЛИЗАТОР
-            path = @"C:\Users\123\Documents\Универ\Теория формальных языков и трансляций\lexemesList.txt";
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("2. Синтаксический анализ");
+            Console.ResetColor();
+            path = @"D:\Media\Универ\Теория формальных языков\lexemeslist.txt";
             Parser parser = new Parser(path);
             parser.Parse();
             #endregion
 
+            #region Семантический анализатор
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("\n3. Семантический анализ");
+            Console.ResetColor();
+            Console.WriteLine($"\nИсходная строка: {analyzer.GetText}");
+            Console.Write("ПОЛИЗ: ");
+            parser.ShowPostfix();
             Console.WriteLine();
-
-            Semantic semantic = new Semantic(parser);
-            Console.WriteLine(semantic.GeneratePOLIZ());
+            #endregion
         }
     }
 }

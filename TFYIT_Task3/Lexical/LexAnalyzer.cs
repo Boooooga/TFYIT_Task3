@@ -15,6 +15,7 @@ namespace TFYIT_All_Tasks.Lexical
         List<string> messages = new List<string>();
         public List<int> indexes = new List<int>();
         private string[] delimiters = { ".", ";", ",", "(", ")" };
+        string originalText = "";
 
         Dictionary<string, List<string>> lexemes = new Dictionary<string, List<string>>();
 
@@ -25,7 +26,13 @@ namespace TFYIT_All_Tasks.Lexical
         // ASGN - присваивание, CMP - сравнение (логическое), LMEQUAL - знаки ">=" и "<=",
         // EQ - знак "==", DLM - разделитель
         private States currentState;
-
+        public string GetText
+        {
+            get
+            {
+                return originalText;
+            }
+        }
         private string GetLexemeType(string input)
         {
             if (input == "if") return "IF";
@@ -61,6 +68,7 @@ namespace TFYIT_All_Tasks.Lexical
             Console.Write(text);
             Console.ResetColor();
             Console.WriteLine("\n");
+            originalText = text;
 
             text = text.ToLower() + " ";
             while (currentState != States.F && currentState != States.ERR)
@@ -160,7 +168,7 @@ namespace TFYIT_All_Tasks.Lexical
                     case States.ASGN:
                         if (text[i] == ' ')
                             currentState = States.S;
-                        else if (char.IsLetter(text[i]))
+                        else if (char.IsLetter(text[i]))    
                             currentState = States.ID;
                         else if (char.IsDigit(text[i]))
                             currentState = States.NUM;

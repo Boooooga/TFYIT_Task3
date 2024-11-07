@@ -19,5 +19,10 @@ namespace TFYIT_All_Tasks.Lexical
         public string Value { get { return value; } }
         public string Type { get { return type; } }
         public int Index { get { return index; } }
+        public Lexeme FindLexByValue(string value)
+        {
+            if (this.value == value) return this;
+            else return null;
+        }
     }
 }

@@ -13,6 +13,8 @@
         CMPNE,
         CMPL,
         CMPLE,
+        CMPM,
+        CMPME,
         MUL,
         DIV
     }
