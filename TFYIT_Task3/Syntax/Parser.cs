@@ -2,8 +2,11 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
+using TFYIT_All_Tasks.Elements;
+using TFYIT_All_Tasks.Interpreter;
 using TFYIT_All_Tasks.Lexical;
 using TFYIT_All_Tasks.Semantic;
 
@@ -21,6 +24,8 @@ namespace TFYIT_All_Tasks.Syntax
         private int elseBlockStart = 0;
 
         private PostfixProcessor postfixProcessor;
+        ExecutionStack stack = new ExecutionStack();
+        Dictionary<string, int> variables = new Dictionary<string, int>(); // переменные и их значения
 
 
         private int currentIndex = 0;
@@ -58,22 +63,191 @@ namespace TFYIT_All_Tasks.Syntax
             }
             postfixProcessor = new PostfixProcessor();
         }
-        // отобразить лексемы
-        public void ShowLexemes()
-        {
-            int i = 0;
-            foreach (Lexeme lexeme in lexemes)
-            {
-                Console.WriteLine($"{i}. Лексема: {lexeme.Value}, тип: {lexeme.Type}");
-                i++;
-            }
-        }
         // отобразить ПОЛИЗ
         public void ShowPostfix()
         {
-            postfixProcessor.PrintPostfix(lexemes, elseBlockStart);
+            Dictionary<int, string> postfixes = postfixProcessor.GetPostfixString(lexemes, elseBlockStart);
+
+            Console.Write("ПОЛИЗ:");
+            foreach (var postfix in postfixes)
+            {
+                Console.Write($"{postfix.Value} ");
+            }
+
+            Console.WriteLine();
+            foreach (var postfix in postfixes)
+            {
+                Console.WriteLine($"{postfix.Key}. {postfix.Value}");
+            }
+
         }
-        // остались ли ещё лексемы для считывания
+
+        #region Интерпретатор
+        // интерпретация
+        public void ProcessLine()
+        {
+            Dictionary<int, PostfixEntry> postfixes = postfixProcessor.GetPostfixes(lexemes, elseBlockStart);
+            Dictionary<int, string> postfixValues = postfixProcessor.GetPostfixString(lexemes, elseBlockStart);
+
+            int pos = 1;
+            while (pos < postfixes.Count + 1)
+            {
+                var entry = postfixes[pos];
+                switch (entry.Type)
+                {
+                    case EEntryType.etCmd:
+                        Console.Write($"{pos}. Обработка команды '{postfixValues[pos]}'\t");
+                        Console.Write("Состояние стека: { ");
+                        ShowStack();
+                        Console.WriteLine("}");
+
+                        var cmd = (ECmd)entry.Index;
+                        pos = ExecuteCmd(cmd, pos, postfixValues);
+                        break;
+                    case EEntryType.etVar:
+                         Console.Write($"{pos}. Обработка переменной '{postfixValues[pos]}'\t");
+                        Console.Write("Состояние стека: { ");
+                        ShowStack();
+                        Console.WriteLine("}");
+
+                        stack.PushVal(GetVarValue(postfixValues[pos]));
+                        pos++; 
+                        break;
+                    case EEntryType.etConst:
+                        Console.Write($"{pos}. Обработка константы '{postfixValues[pos]}'\t");
+                        Console.Write("Состояние стека: { ");
+                        ShowStack();
+                        Console.WriteLine("}");
+
+                        stack.PushVal(int.Parse(postfixValues[pos]));
+                        pos++;
+                        break;
+                    case EEntryType.etCmdPtr:
+                        Console.Write($"{pos}. Обработка адреса '{postfixValues[pos]}'\t");
+                        Console.Write("Состояние стека: { ");
+                        ShowStack();
+                        Console.WriteLine("}");
+
+                        stack.PushVal(int.Parse(postfixValues[pos]));
+                        pos++;
+                        break;
+                }
+            }
+            ShowVariables();
+
+        }
+        // исполнение команд интерпретатором
+        public int ExecuteCmd(ECmd cmd, int pos, Dictionary<int, string> posfixValues)
+        {
+            switch (cmd)
+            {
+                case ECmd.SET:
+                    int value = stack.PopVal();
+                    int targetValue = stack.PopVal();
+
+                    string variable = variables.FirstOrDefault(pair => pair.Value == targetValue).Key;
+                    SetVarValue(variable, value);
+                    return pos + 1;
+                case ECmd.ADD:
+                    stack.PushVal(stack.PopVal() + stack.PopVal());
+                    return pos + 1;
+                case ECmd.SUB:
+                    int subBy = stack.PopVal();
+                    stack.PushVal(stack.PopVal() - subBy);
+                    return pos + 1;
+                case ECmd.MUL:
+                    stack.PushVal(stack.PopVal() * stack.PopVal());
+                    return pos + 1;
+                case ECmd.DIV:
+                    int divideBy = stack.PopVal();
+                    if (divideBy == 0) throw new Exception("Деление на ноль!");
+                    else
+                        stack.PushVal(stack.PopVal() / divideBy);
+                    return pos + 1;
+                case ECmd.CMPL:
+                    stack.PushVal(stack.PopVal() > stack.PopVal() ? 1 : 0);
+                    return pos + 1;
+                case ECmd.CMPM:
+                    stack.PushVal(stack.PopVal() < stack.PopVal() ? 1 : 0);
+                    return pos + 1;
+                case ECmd.CMPLE:
+                    stack.PushVal(stack.PopVal() >= stack.PopVal() ? 1 : 0);
+                    return pos + 1;
+                case ECmd.CMPME:
+                    stack.PushVal(stack.PopVal() <= stack.PopVal() ? 1 : 0);
+                    return pos + 1;
+                case ECmd.CMPNE:
+                    stack.PushVal(stack.PopVal() != stack.PopVal() ? 1 : 0);
+                    return pos + 1;
+                case ECmd.CMPE:
+                    stack.PushVal(stack.PopVal() == stack.PopVal() ? 1 : 0);
+                    return pos + 1;
+                case ECmd.AND:
+                    int cond1, cond2;
+                    cond1 = stack.PopVal();
+                    cond2 = stack.PopVal();
+                    stack.PushVal((cond1 != 0 && cond2 != 0) ? 1 : 0);
+                    return pos + 1;
+                case ECmd.OR:
+                    cond1 = stack.PopVal();
+                    cond2 = stack.PopVal();
+                    stack.PushVal((cond1 != 0 || cond2 != 0) ? 1 : 0);
+                    return pos + 1;
+                case ECmd.JMP:
+                    return stack.PopVal();
+                case ECmd.JZ:
+                    int addr = stack.PopVal();
+                    int cond = stack.PopVal();
+                    return cond == 0 ? addr : pos + 1;
+                default:
+                    throw new Exception("Неизвестная команда");
+
+            }
+        }
+        // получение значения переменной по её названию (если значение не задано - предложение задать)
+        private int GetVarValue(string identifier)
+        {
+            if (variables.ContainsKey(identifier))
+                return variables[identifier];
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write($" - Значение переменной {identifier} не определено. Задайте значение {identifier} = ");
+                int newVariableValue = int.Parse(Console.ReadLine());
+                Console.ResetColor();
+                variables.Add(identifier, newVariableValue);
+                return variables[identifier];
+            }
+        }
+        // установка значения переменной по её названию
+        private void SetVarValue(string identifier, int value)
+        {
+            if (variables.ContainsKey(identifier))
+                variables[identifier] = value;
+            else
+                throw new Exception($"Попытка установить значение неизвестной переменной {identifier}");
+        }
+        // отображение стека в процессе интерпретации
+        private void ShowStack()
+        {
+            Stack<int> toReturn = stack.stack;
+            foreach (int item in toReturn)
+            {
+                Console.Write($"{item} ");
+            }
+        }
+        // отображение текущих значений переменных
+        private void ShowVariables()
+        {
+            Console.WriteLine("\nЗначения переменных на момент окончания работы:");
+            foreach (var item in variables)
+            {
+                Console.WriteLine($"Переменная {item.Key} - значение {item.Value}");
+            }
+        }
+        #endregion
+
+        #region Вспомогательные методы для семантического анализа
         private bool AnyMoreLexemes()
         {
             return currentIndex < lexemes.Count;
@@ -133,7 +307,9 @@ namespace TFYIT_All_Tasks.Syntax
             }
             return lexemes[i + 1].Index;
         }
+        #endregion
 
+        #region Семантический анализ. Составление ПОЛИЗ
         // запуск парсинга
         public void Parse()
         {
@@ -160,7 +336,7 @@ namespace TFYIT_All_Tasks.Syntax
                 Expect("ELSE");
 
                 elseBlockStart = currentIndex + 1;
-                postfixProcessor.WriteCmdPtr(elseBlockStart);
+                postfixProcessor.WriteCmdPtr(-2);
                 postfixProcessor.WriteCmd(Elements.ECmd.JMP);
                 Console.WriteLine("Анализ блока else");
                 ParseStatementList();
@@ -236,7 +412,6 @@ namespace TFYIT_All_Tasks.Syntax
                     postfixProcessor.WriteCmd(Elements.ECmd.SUB);
             }
         }
-
         // парсинг термов (с поддержкой умножения/деления)
         private void ParseTerm()
         {
@@ -256,7 +431,6 @@ namespace TFYIT_All_Tasks.Syntax
                     postfixProcessor.WriteCmd(Elements.ECmd.DIV);
             }
         }
-
         // парсинг факторов (число или идентификатор)
         private void ParseFactor()
         {
@@ -304,7 +478,6 @@ namespace TFYIT_All_Tasks.Syntax
                 throw new Exception("Ожидался оператор сравнения");
             }
         }
-
         // парсинг оператора присваивания
         private void ParseAssignment() 
         {
@@ -314,7 +487,7 @@ namespace TFYIT_All_Tasks.Syntax
             ParseExpression();
             postfixProcessor.WriteCmd(Elements.ECmd.SET);
         }
-
+        #endregion
         public List<Lexeme> GetLexemes
         {
             get { return lexemes; }

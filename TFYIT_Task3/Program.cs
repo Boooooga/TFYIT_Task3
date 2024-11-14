@@ -18,7 +18,7 @@ namespace TFYIT_Task2
             Console.WriteLine("1. Лексический анализ");
             Console.ResetColor();
 
-            string path = @"D:\Media\Универ\Теория формальных языков\inputline.txt";
+            string path = @"D:\Media\Универ\Теория формальных языков\inputline1.txt";
             LexAnalyzer analyzer = new LexAnalyzer();
             List<string> result = analyzer.Analyze(path);
 
@@ -51,9 +51,15 @@ namespace TFYIT_Task2
             Console.WriteLine("\n3. Семантический анализ");
             Console.ResetColor();
             Console.WriteLine($"\nИсходная строка: {analyzer.GetText}");
-            Console.Write("ПОЛИЗ: ");
             parser.ShowPostfix();
-            Console.WriteLine();
+            #endregion
+
+            #region Интерпретация
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("\n4. Интерпретация\n");
+            Console.ResetColor();
+
+            parser.ProcessLine();
             #endregion
         }
     }

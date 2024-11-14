@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TFYIT_All_Tasks.Elements;
+using TFYIT_All_Tasks.Interpreter;
 using TFYIT_All_Tasks.Lexical;
 
 namespace TFYIT_All_Tasks.Semantic
@@ -11,6 +13,7 @@ namespace TFYIT_All_Tasks.Semantic
     internal class PostfixProcessor
     {
         private List<PostfixEntry> postfixEntries;
+        private ExecutionStack stack;
 
         public PostfixProcessor()
         {
@@ -41,10 +44,10 @@ namespace TFYIT_All_Tasks.Semantic
             postfixEntries[ind] = new PostfixEntry(EEntryType.etCmdPtr, ptr);
         }
 
-        public void PrintPostfix(List<Lexeme> lexemes, int elsePtr)
+        public Dictionary<int, string> GetPostfixString(List<Lexeme> lexemes, int elsePtr)
         {
             int i = 0;
-            List<string> orderedPostfixes = new List<string>();
+            Dictionary<int, string> orderedPostfixes = new Dictionary<int, string>();
             foreach (var entry in postfixEntries)
             {
                 string entryDescription = "";
@@ -58,27 +61,34 @@ namespace TFYIT_All_Tasks.Semantic
                         entryDescription = $"{lexemes[entry.Index - 1].Value}";
                         break;
                     case EEntryType.etConst:
-                        i++;
                         entryDescription = $"{lexemes[entry.Index - 1].Value}";
                         break;
                     case EEntryType.etCmdPtr:
                         if (entry.Index == -1)
                             entry.Index = elsePtr;
-                        entryDescription = $"{entry.Index + 2}";
+                        if (entry.Index == -2)
+                            entry.Index = postfixEntries.Count + 1;
+                        entryDescription = $"{entry.Index}";
                         break;
                     default:
                         entryDescription = "Неизвестный тип";
                         break;
                 }
                 i++;
-                orderedPostfixes.Add($"{i}. {entryDescription}");
-                Console.Write($"{entryDescription} ");
+                orderedPostfixes.Add(i, entryDescription);
             }
-            Console.WriteLine();
-            foreach (string item in orderedPostfixes)
+            return orderedPostfixes;
+        }
+        public Dictionary<int, PostfixEntry> GetPostfixes(List<Lexeme> lexemes, int elsePtr)
+        {
+            Dictionary<int, PostfixEntry> pairs = new Dictionary<int, PostfixEntry>();
+            int i = 1;
+            foreach (var entry in postfixEntries)
             {
-                Console.WriteLine(item);
+                pairs.Add(i, entry);
+                i++;
             }
+            return pairs;
         }
     }
 }

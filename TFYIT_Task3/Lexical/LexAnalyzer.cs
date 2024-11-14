@@ -21,10 +21,11 @@ namespace TFYIT_All_Tasks.Lexical
 
 
         // ПАРАМЕТРЫ АВТОМАТА
-        private enum States { S, ID, NUM, OPER, ASGN, CMP, LMEQUAL, EQ, F, DLM, ERR } // состояния автомата
+        private enum States { S, ID, NUM, OPER, ASGN, CMPM, CMPL, CMPME, CMPLE, CMPNE, CMPE, F, DLM, ERR } // состояния автомата
         // S - начальное, ID - идентификатор, NUM - константа, OPER - арифметическая операция,
-        // ASGN - присваивание, CMP - сравнение (логическое), LMEQUAL - знаки ">=" и "<=",
-        // EQ - знак "==", DLM - разделитель
+        // ASGN - присваивание, CMPM - больше, CMPL - меньше, CMPME - больше или равно, CMPLE - меньше или равно,
+        // CMPE - равно, CMPNE - не равно,
+        // DLM - разделитель, ERR - ошибка, F - финальное
         private States currentState;
         public string GetText
         {
@@ -55,6 +56,8 @@ namespace TFYIT_All_Tasks.Lexical
             int i = 0;
             int start = 0;
             string text;
+            bool isOk = true;
+            string unknownLex = "";
             List<string> allLexemes = new List<string>();
             List<string> orderedLexemesOut = new List<string>();
             // читаем анализируемый текст из файла
@@ -79,18 +82,18 @@ namespace TFYIT_All_Tasks.Lexical
                 switch (currentState)
                 {
                     case States.S:
-                        if (text[i] == ' ')
-                        {
-                        }
                         // если считанный символ - буква
-                        else if (char.IsLetter(text[i]))
+                        if (char.IsLetter(text[i]))
                             currentState = States.ID;
                         // если считанный символ - цифра
                         else if (char.IsDigit(text[i]))
                             currentState = States.NUM;
-                        // если считанный символ - знак сравнения
-                        else if (text[i] == '>' || text[i] == '<')
-                            currentState = States.CMP;
+                        // если считанный символ - знак больше
+                        else if (text[i] == '>')
+                            currentState = States.CMPM;
+                        // если считанный символ - знак меньше
+                        else if (text[i] == '<')
+                            currentState = States.CMPL;
                         // если считанный символ - знак равенства
                         else if (text[i] == '=')
                             currentState = States.ASGN;
@@ -99,7 +102,13 @@ namespace TFYIT_All_Tasks.Lexical
                             currentState = States.OPER;
                         else if (text[i] == ';')
                             currentState = States.DLM;
-                        else currentState = States.ERR;
+                        else
+                        {
+                            currentState = States.ERR;
+                            isOk = false;
+                            unknownLex = text[i].ToString();
+                            isOk = false;
+                        }
                         break;
 
                     case States.ID:
@@ -107,8 +116,10 @@ namespace TFYIT_All_Tasks.Lexical
                             currentState = States.S;
                         else if (char.IsLetterOrDigit(text[i]))
                             add = false;
-                        else if (text[i] == '>' || text[i] == '<')
-                            currentState = States.CMP;
+                        else if (text[i] == '>')
+                            currentState = States.CMPM;
+                        else if (text[i] == '<')
+                            currentState = States.CMPL;
                         else if (text[i] == '=')
                             currentState = States.ASGN;
                         else if (text[i] == '+' || text[i] == '-' || text[i] == '*' || text[i] == '/')
@@ -118,6 +129,8 @@ namespace TFYIT_All_Tasks.Lexical
                         else
                         {
                             currentState = States.ERR;
+                            isOk = false;
+                            unknownLex = text[i].ToString();
                             add = false;
                         }
                         break;
@@ -127,8 +140,10 @@ namespace TFYIT_All_Tasks.Lexical
                             currentState = States.S;
                         else if (char.IsDigit(text[i]))
                             add = false;
-                        else if (text[i] == '>' || text[i] == '<')
-                            currentState = States.CMP;
+                        else if (text[i] == '>')
+                            currentState = States.CMPM;
+                        else if (text[i] == '<')
+                            currentState = States.CMPL;
                         else if (text[i] == '=')
                             currentState = States.ASGN;
                         else if (text[i] == '+' || text[i] == '-' || text[i] == '*' || text[i] == '/')
@@ -138,11 +153,13 @@ namespace TFYIT_All_Tasks.Lexical
                         else
                         {
                             currentState = States.ERR;
+                            isOk = false;
+                            unknownLex = text[i].ToString();
                             add = false;
                         }
                         break;
 
-                    case States.CMP:
+                    case States.CMPM:
                         if (text[i] == ' ')
                             currentState = States.S;
                         else if (char.IsLetter(text[i]))
@@ -151,8 +168,36 @@ namespace TFYIT_All_Tasks.Lexical
                             currentState = States.NUM;
                         else if (text[i] == '=')
                         {
-                            currentState = States.LMEQUAL;
-                            add = false; // если получился символ >= или <=
+                            currentState = States.CMPME;
+                            add = false; // если получился символ >=
+                        }
+                        else if (text[i] == ';')
+                            currentState = States.DLM;
+                        else
+                        {
+                            currentState = States.ERR;
+                            isOk = false;
+                            unknownLex = text[i].ToString();
+                            add = false;
+                        }
+                        break;
+
+                    case States.CMPL:
+                        if (text[i] == ' ')
+                            currentState = States.S;
+                        else if (char.IsLetter(text[i]))
+                            currentState = States.ID;
+                        else if (char.IsDigit(text[i]))
+                            currentState = States.NUM;
+                        else if (text[i] == '=')
+                        {
+                            currentState = States.CMPME;
+                            add = false; // если получился символ <=
+                        }
+                        else if (text[i] == '>')
+                        {
+                            currentState = States.CMPNE;
+                            add = false; // если получился символ <>
                         }
                         else if (text[i] == ';')
                             currentState = States.DLM;
@@ -161,6 +206,8 @@ namespace TFYIT_All_Tasks.Lexical
                         else
                         {
                             currentState = States.ERR;
+                            isOk = false;
+                            unknownLex = text[i].ToString();
                             add = false;
                         }
                         break;
@@ -174,7 +221,7 @@ namespace TFYIT_All_Tasks.Lexical
                             currentState = States.NUM;
                         else if (text[i] == '=')
                         {
-                            currentState = States.EQ;
+                            currentState = States.CMPE;
                             add = false;
                         }
                         else if (text[i] == ';')
@@ -182,6 +229,8 @@ namespace TFYIT_All_Tasks.Lexical
                         else
                         {
                             currentState = States.ERR;
+                            isOk = false;
+                            unknownLex = text[i].ToString();
                             add = false;
                         }
                         break;
@@ -198,12 +247,16 @@ namespace TFYIT_All_Tasks.Lexical
                         else
                         {
                             currentState = States.ERR;
+                            isOk = false;
+                            unknownLex = text[i].ToString();
                             add = false;
                         }
                         break;
 
-                    case States.LMEQUAL:
-                    case States.EQ:
+                    case States.CMPME:
+                    case States.CMPLE:
+                    case States.CMPNE:
+                    case States.CMPE:
                         if (text[i] == ' ')
                             currentState = States.S;
                         else if (char.IsLetter(text[i]))
@@ -215,6 +268,8 @@ namespace TFYIT_All_Tasks.Lexical
                         else
                         {
                             currentState = States.ERR;
+                            isOk = false;
+                            unknownLex = text[i].ToString();
                             add = false;
                         }
                         break;
@@ -229,6 +284,8 @@ namespace TFYIT_All_Tasks.Lexical
                         else
                         {
                             currentState = States.ERR;
+                            isOk = false;
+                            unknownLex = text[i].ToString();
                             add = false;
                         }
                         break;
@@ -257,9 +314,9 @@ namespace TFYIT_All_Tasks.Lexical
                 }
 
                 if (currentState != prevState && (currentState == States.ID ||
-                    currentState == States.NUM || currentState == States.CMP ||
-                    currentState == States.ASGN || currentState == States.OPER
-                    || currentState == States.DLM))
+                    currentState == States.NUM || currentState == States.CMPL || 
+                    currentState == States.CMPM || currentState == States.ASGN || 
+                    currentState == States.OPER || currentState == States.DLM))
                 {
                     start = i;
                 }
@@ -274,114 +331,121 @@ namespace TFYIT_All_Tasks.Lexical
 
             }
 
-            foreach (string item in messages)
+            if (isOk) 
             {
-                if (reservedWords.Contains(item))
+                foreach (string item in messages)
                 {
-                    if (!lexemes.Keys.Contains("Зарезервированные слова"))
+                    if (reservedWords.Contains(item))
                     {
-                        lexemes.Add("Зарезервированные слова", new List<string> { item });
-                        allLexemes.Add(item);
-                        Console.WriteLine($"{item} \t| зарезервированное слово");
-                        orderedLexemesOut.Add($"{item} " + $"{GetLexemeType(item)}");
-                    }
+                        if (!lexemes.Keys.Contains("Зарезервированные слова"))
+                        {
+                            lexemes.Add("Зарезервированные слова", new List<string> { item });
+                            allLexemes.Add(item);
+                            Console.WriteLine($"{item} \t| зарезервированное слово");
+                            orderedLexemesOut.Add($"{item} " + $"{GetLexemeType(item)}");
+                        }
 
-                    else
-                    {
-                        lexemes["Зарезервированные слова"].Add(item);
-                        allLexemes.Add(item);
-                        Console.WriteLine($"{item} \t| зарезервированное слово");
-                        orderedLexemesOut.Add($"{item} " + $"{GetLexemeType(item)}");
+                        else
+                        {
+                            lexemes["Зарезервированные слова"].Add(item);
+                            allLexemes.Add(item);
+                            Console.WriteLine($"{item} \t| зарезервированное слово");
+                            orderedLexemesOut.Add($"{item} " + $"{GetLexemeType(item)}");
+                        }
                     }
-                }
-                // если добавляем спецсимвол
-                else if (specialSigns.Contains(item))
-                {
-                    if (!lexemes.Keys.Contains("Спецсимволы"))
+                    // если добавляем спецсимвол
+                    else if (specialSigns.Contains(item))
                     {
-                        lexemes.Add("Спецсимволы", new List<string> { item });
-                        allLexemes.Add(item);
-                        Console.WriteLine($"{item} \t| спецсимвол");
-                        orderedLexemesOut.Add($"{item} " + $"{GetLexemeType(item)}");
+                        if (!lexemes.Keys.Contains("Спецсимволы"))
+                        {
+                            lexemes.Add("Спецсимволы", new List<string> { item });
+                            allLexemes.Add(item);
+                            Console.WriteLine($"{item} \t| спецсимвол");
+                            orderedLexemesOut.Add($"{item} " + $"{GetLexemeType(item)}");
+                        }
+                        else
+                        {
+                            lexemes["Спецсимволы"].Add(item);
+                            allLexemes.Add(item);
+                            Console.WriteLine($"{item} \t| спецсимвол");
+                            orderedLexemesOut.Add($"{item} " + $"{GetLexemeType(item)}");
+                        }
                     }
-                    else
+                    // если добавляем разделитель
+                    else if (delimiters.Contains(item))
                     {
-                        lexemes["Спецсимволы"].Add(item);
-                        allLexemes.Add(item);
-                        Console.WriteLine($"{item} \t| спецсимвол");
-                        orderedLexemesOut.Add($"{item} " + $"{GetLexemeType(item)}");
+                        if (!lexemes.Keys.Contains("Разделители"))
+                        {
+                            lexemes.Add("Разделители", new List<string> { item });
+                            allLexemes.Add(item);
+                            Console.WriteLine($"{item} \t| разделитель");
+                            orderedLexemesOut.Add($"{item} " + $"{GetLexemeType(item)}");
+                        }
+                        else
+                        {
+                            lexemes["Разделители"].Add(item);
+                            allLexemes.Add(item);
+                            Console.WriteLine($"{item} \t| разделитель");
+                            orderedLexemesOut.Add($"{item} " + $"{GetLexemeType(item)}");
+                        }
                     }
-                }
-                // если добавляем разделитель
-                else if (delimiters.Contains(item))
-                {
-                    if (!lexemes.Keys.Contains("Разделители"))
+                    // если добавляем константу
+                    else if (item.All(char.IsDigit))
                     {
-                        lexemes.Add("Разделители", new List<string> { item });
-                        allLexemes.Add(item);
-                        Console.WriteLine($"{item} \t| разделитель");
-                        orderedLexemesOut.Add($"{item} " + $"{GetLexemeType(item)}");
-                    }
-                    else
-                    {
-                        lexemes["Разделители"].Add(item);
-                        allLexemes.Add(item);
-                        Console.WriteLine($"{item} \t| разделитель");
-                        orderedLexemesOut.Add($"{item} " + $"{GetLexemeType(item)}");
-                    }
-                }
-                // если добавляем константу
-                else if (item.All(char.IsDigit))
-                {
-                    if (!lexemes.Keys.Contains("Константы"))
-                    {
-                        lexemes.Add("Константы", new List<string> { item });
-                        allLexemes.Add(item);
-                        Console.WriteLine($"{item} \t| константа");
-                        orderedLexemesOut.Add($"{item} " + $"{GetLexemeType(item)}");
-                    }
-                    else
-                    {
-                        lexemes["Константы"].Add(item);
-                        allLexemes.Add(item);
-                        Console.WriteLine($"{item} \t| константа");
-                        orderedLexemesOut.Add($"{item} " + $"{GetLexemeType(item)}");
-                    }
-                }
-                else
-                {
-                    if (!lexemes.Keys.Contains("Идентификаторы"))
-                    {
-                        lexemes.Add("Идентификаторы", new List<string> { item });
-                        allLexemes.Add(item);
-                        Console.WriteLine($"{item} \t| идентификатор");
-                        orderedLexemesOut.Add($"{item} " + $"{GetLexemeType(item)}");
+                        if (!lexemes.Keys.Contains("Константы"))
+                        {
+                            lexemes.Add("Константы", new List<string> { item });
+                            allLexemes.Add(item);
+                            Console.WriteLine($"{item} \t| константа");
+                            orderedLexemesOut.Add($"{item} " + $"{GetLexemeType(item)}");
+                        }
+                        else
+                        {
+                            lexemes["Константы"].Add(item);
+                            allLexemes.Add(item);
+                            Console.WriteLine($"{item} \t| константа");
+                            orderedLexemesOut.Add($"{item} " + $"{GetLexemeType(item)}");
+                        }
                     }
                     else
                     {
-                        lexemes["Идентификаторы"].Add(item);
-                        allLexemes.Add(item);
-                        Console.WriteLine($"{item} \t| идентификатор");
-                        orderedLexemesOut.Add($"{item} " + $"{GetLexemeType(item)}");
+                        if (!lexemes.Keys.Contains("Идентификаторы"))
+                        {
+                            lexemes.Add("Идентификаторы", new List<string> { item });
+                            allLexemes.Add(item);
+                            Console.WriteLine($"{item} \t| идентификатор");
+                            orderedLexemesOut.Add($"{item} " + $"{GetLexemeType(item)}");
+                        }
+                        else
+                        {
+                            lexemes["Идентификаторы"].Add(item);
+                            allLexemes.Add(item);
+                            Console.WriteLine($"{item} \t| идентификатор");
+                            orderedLexemesOut.Add($"{item} " + $"{GetLexemeType(item)}");
+                        }
                     }
                 }
-            }
 
 
-            Console.WriteLine();
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            foreach (string key in lexemes.Keys)
-            {
-                Console.Write($"{key}: ");
-                foreach (string value in lexemes[key].Distinct())
-                {
-                    Console.Write($"{value}, ");
-                }
                 Console.WriteLine();
-            }
-            Console.ResetColor();
+                foreach (string key in lexemes.Keys)
+                {
+                    Console.Write($"{key}: ");
+                    foreach (string value in lexemes[key].Distinct())
+                    {
+                        Console.Write($"{value}, ");
+                    }
+                    Console.WriteLine();
+                }
 
-            return orderedLexemesOut;
+                return orderedLexemesOut;
+            }
+            else
+            {
+                Console.WriteLine($"Обнаружена неизвестная лексема: {unknownLex}!");
+                return new List<string>();
+            }
+            
         }
     }
 }
