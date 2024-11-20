@@ -29,17 +29,17 @@ namespace TFYIT_All_Tasks.Semantic
             postfixEntries.Add(new PostfixEntry(EEntryType.etVar, ind));
             return postfixEntries.Count - 1;
         }
-        public int WriteConst(int ind)
+        public int WriteConst(int ind) // константа
         {
             postfixEntries.Add(new PostfixEntry(EEntryType.etConst, ind));
             return postfixEntries.Count - 1;
         }
-        public int WriteCmdPtr(int ptr)
+        public int WriteCmdPtr(int ptr) // указатель адреса
         {
             postfixEntries.Add(new PostfixEntry(EEntryType.etCmdPtr, ptr));
             return postfixEntries.Count - 1;
         }
-        public void SetCmdPtr(int ind, int ptr)
+        public void SetCmdPtr(int ind, int ptr) // установить указатель
         {
             postfixEntries[ind] = new PostfixEntry(EEntryType.etCmdPtr, ptr);
         }

@@ -58,6 +58,7 @@ namespace TFYIT_All_Tasks.Lexical
             string text;
             bool isOk = true;
             string unknownLex = "";
+            int unknownPos = -1;
             List<string> allLexemes = new List<string>();
             List<string> orderedLexemesOut = new List<string>();
             // читаем анализируемый текст из файла
@@ -107,6 +108,7 @@ namespace TFYIT_All_Tasks.Lexical
                             currentState = States.ERR;
                             isOk = false;
                             unknownLex = text[i].ToString();
+                            unknownPos = i;
                             isOk = false;
                         }
                         break;
@@ -131,6 +133,7 @@ namespace TFYIT_All_Tasks.Lexical
                             currentState = States.ERR;
                             isOk = false;
                             unknownLex = text[i].ToString();
+                            unknownPos = i;
                             add = false;
                         }
                         break;
@@ -155,6 +158,7 @@ namespace TFYIT_All_Tasks.Lexical
                             currentState = States.ERR;
                             isOk = false;
                             unknownLex = text[i].ToString();
+                            unknownPos = i;
                             add = false;
                         }
                         break;
@@ -178,6 +182,7 @@ namespace TFYIT_All_Tasks.Lexical
                             currentState = States.ERR;
                             isOk = false;
                             unknownLex = text[i].ToString();
+                            unknownPos = i;
                             add = false;
                         }
                         break;
@@ -208,6 +213,7 @@ namespace TFYIT_All_Tasks.Lexical
                             currentState = States.ERR;
                             isOk = false;
                             unknownLex = text[i].ToString();
+                            unknownPos = i;
                             add = false;
                         }
                         break;
@@ -231,6 +237,7 @@ namespace TFYIT_All_Tasks.Lexical
                             currentState = States.ERR;
                             isOk = false;
                             unknownLex = text[i].ToString();
+                            unknownPos = i;
                             add = false;
                         }
                         break;
@@ -249,6 +256,7 @@ namespace TFYIT_All_Tasks.Lexical
                             currentState = States.ERR;
                             isOk = false;
                             unknownLex = text[i].ToString();
+                            unknownPos = i;
                             add = false;
                         }
                         break;
@@ -270,6 +278,7 @@ namespace TFYIT_All_Tasks.Lexical
                             currentState = States.ERR;
                             isOk = false;
                             unknownLex = text[i].ToString();
+                            unknownPos = i;
                             add = false;
                         }
                         break;
@@ -286,6 +295,7 @@ namespace TFYIT_All_Tasks.Lexical
                             currentState = States.ERR;
                             isOk = false;
                             unknownLex = text[i].ToString();
+                            unknownPos = i;
                             add = false;
                         }
                         break;
@@ -442,7 +452,7 @@ namespace TFYIT_All_Tasks.Lexical
             }
             else
             {
-                Console.WriteLine($"Обнаружена неизвестная лексема: {unknownLex}!");
+                Console.WriteLine($"Обнаружена неизвестная лексема: {unknownLex} на позиции {unknownPos}.");
                 return new List<string>();
             }
             

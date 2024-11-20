@@ -247,7 +247,7 @@ namespace TFYIT_All_Tasks.Syntax
         }
         #endregion
 
-        #region Вспомогательные методы для семантического анализа
+        #region Вспомогательные методы для синтаксического анализа
         private bool AnyMoreLexemes()
         {
             return currentIndex < lexemes.Count;
@@ -309,7 +309,7 @@ namespace TFYIT_All_Tasks.Syntax
         }
         #endregion
 
-        #region Семантический анализ. Составление ПОЛИЗ
+        #region Синтаксический анализ.
         // запуск парсинга
         public void Parse()
         {
@@ -351,16 +351,16 @@ namespace TFYIT_All_Tasks.Syntax
         // парсинг списка операторов
         private void ParseStatementList()
         {
-            Console.WriteLine("Анализ списка операторов");
+            Console.WriteLine("Анализ оператора");
             ParseStatement();
-            while (Match("DLM"))
+            if (Match("DLM"))
             {
                 Console.Write("Обнаружен разделитель '");
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.Write(";");
                 Console.ResetColor();
-                Console.WriteLine("', продолжается анализ списка операторов");
-                ParseStatement();
+                Console.WriteLine("', продолжается анализ операторов");
+                ParseStatementList();
             }
         }
         // парсинг условий
@@ -372,22 +372,18 @@ namespace TFYIT_All_Tasks.Syntax
             ParseExpression();
             ProcessComparisonIndex();
 
-            while (Match("OR"))
+            if (Match("OR"))
             {
                 Console.WriteLine("Обнаружен 'or', анализ логических выражений продолжается");
-                ParseExpression();
-                ParseComparisonOp();
-                ParseExpression();
+                ParseCondition();
 
                 ProcessComparisonIndex();
                 postfixProcessor.WriteCmd(Elements.ECmd.OR);
             }
-            while (Match("AND"))
+            if (Match("AND"))
             {
                 Console.WriteLine("Обнаружен 'and', анализ логических выражений продолжается");
-                ParseExpression();
-                ParseComparisonOp();
-                ParseExpression();
+                ParseCondition();
 
                 ProcessComparisonIndex();
                 postfixProcessor.WriteCmd(Elements.ECmd.AND);
